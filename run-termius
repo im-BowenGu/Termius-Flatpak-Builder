@@ -1,0 +1,10 @@
+#!/bin/sh
+export XDG_CURRENT_DESKTOP=GNOME
+export ELECTRON_OZONE_PLATFORM_HINT=auto
+
+exec /app/opt/Termius/termius-app \
+  --no-sandbox \
+  --disable-gpu-sandbox \
+  --disable-dev-shm-usage \
+  --ignore-gpu-blocklist \
+  "$@"

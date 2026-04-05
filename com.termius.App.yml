@@ -1,0 +1,58 @@
+app-id: com.termius.App
+runtime: org.gnome.Platform
+runtime-version: '48'
+sdk: org.gnome.Sdk
+command: run-termius
+
+modules:
+  - name: termius-deb
+    buildsystem: simple
+    build-commands:
+      - ar x Termius.deb
+      - tar xf data.tar.xz -C /app
+    sources:
+      - type: file
+        url: https://www.termius.com/download/linux/Termius.deb
+        sha256: cf836f2a2da62c0865827d7fd83eec731453d5559c976cbaf335058009c8b8b8
+
+  - name: launcher
+    buildsystem: simple
+    build-commands:
+      - install -D run-termius /app/bin/run-termius
+      
+      # Copy and rename the desktop file
+      - install -Dm644 /app/usr/share/applications/termius-app.desktop /app/share/applications/com.termius.App.desktop
+      
+      # Patch the desktop file
+      - sed -i 's/^Exec=.*/Exec=run-termius %U/' /app/share/applications/com.termius.App.desktop
+      - sed -i 's/^Icon=.*/Icon=com.termius.App/' /app/share/applications/com.termius.App.desktop
+      
+      # Clean up icons and rename to match app-id
+      - cp -r /app/usr/share/icons /app/share/icons
+      
+      # REMOVE the 1024x1024 icon that causes the export error
+      - rm -rf /app/share/icons/hicolor/1024x1024
+      
+      # Rename the rest
+      - find /app/share/icons -name "termius-app.png" -execdir mv {} com.termius.App.png \;
+      - find /app/share/icons -name "termius-app.svg" -execdir mv {} com.termius.App.svg \;
+    sources:
+      - type: file
+        path: run-termius
+
+finish-args:
+  - --socket=wayland
+  - --socket=x11
+  - --socket=pulseaudio
+  - --socket=session-bus
+  - --socket=system-bus
+  - --share=network
+  - --share=ipc
+  - --device=dri
+  - --device=shm
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.gnome.keyring.SystemPrompter
+  - --persist=.config/Termius
+  - --persist=.termius
+  - --filesystem=xdg-run/p11-kit:ro
